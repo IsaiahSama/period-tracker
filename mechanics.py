@@ -2,6 +2,7 @@
 from datetime import date
 from os import system, get_terminal_size
 from pyinputplus import inputDate, inputNum
+from database import Database
 
 
 def divider():
@@ -56,11 +57,29 @@ class RequestHandler:
             # Function for making predictions
             pass 
         elif request == "Add Period":
-            # Function to add a starting date
-            pass 
+            # Function to add a Cycle duration
+            pass
+        elif request == "View":
+            # Function to display all entries nicely formatted
+            self.handle_view()
+            pass
         else:
             # Function that cleanly exits the program
             pass
+
+    def handle_view(self) -> bool:
+        """Function that displays all recorded cycles."""
+        db = Database()
+        cycles = db.query_all_data()
+        db.close()
+        dh = DateHandler()
+        if not cycles:
+            print("You don't seem to have any cycles registered for me to display.")
+            return False
+        
+        to_send_list = [f"{i}) From {dh.get_format_date(dh.get_date_object(v[1]))} to {dh.get_format_date(dh.get_date_object(v[2]))}" for i, v in cycles]
+        del dh, db
+        return "\n".join(to_send_list)
 
 class DateHandler:
     """Closs responsible for handling date conversions, and reading date objects"""
@@ -75,6 +94,21 @@ class DateHandler:
     def get_today_date(self) -> date:
         """Function that returns the current date and time as a date object"""
         return date.today()
+
+    def get_format_date(self, do:date) -> str:
+        """Function which accepts a date object as an arguments, and returns a string in the format of:
+        WeekDay Month Day Year"
+        
+        Arguments -> Date Object (do)
+        """
+
+        # Step one, get the full string by the ctime method
+        # str_date = date.ctime(do)
+        # Step two, Replace the 00's and colons with empty spaces
+        # purged_date = str_date.replace("00", '').replace(":: ", "")
+        # return purged_date
+        # OR!!!
+        return date.ctime(do).replace("00", "").replace(":: ", "")
 
 class Predictor:
     """Class responsible for dealing the 'predictive' part of the program"""
