@@ -78,7 +78,9 @@ class RequestHandler:
         self.db.connect()
         cycles = self.db.query_finished_cycles()
         if not cycles: print("Sorry, you have no previous finished cycles for me to work with."); return False
+        if len(cycles) < 2: print("Oh dear, I don't have enough data to work with. I need at least 2 entries"); return False
         predictor = Predictor(cycles)
+        predictor.main()
 
 
     def handle_add_period(self):
@@ -144,14 +146,32 @@ class DateHandler:
         # OR!!!
         return date.ctime(do).replace("00", "").replace(":: ", "")
 
+    def add_days(self, do:date, days:int) -> date:
+        """Function which accepts a date object, and a number of days, adds the number of days to the date object, and then return the result."""
+        to_return = do
+
+        for _ in range(days):
+            try:
+                to_return = to_return.replace(day=to_return.day + 1)
+            except ValueError:
+                try:
+                    to_return = to_return.replace(month=to_return.month+1, day=1)
+                except ValueError:
+                    to_return = to_return.replace(year=to_return.year+1, month=1, day=1)
+
+        return to_return
+
 class Predictor:
     """Class responsible for dealing the 'predictive' part of the program"""
     def __init__(self, cycles:list) -> None:
         self.cycles = cycles
 
-    def predict(self):
+    def main(self):
         """Main function of the Predictor class, which runs all of the functions, and analyzes the data"""
-        pass
+        self.get_start_end_date_objects()
+        avg_duration = self.get_average_duration(self.get_cycle_durations())
+        avg_time_between = self.get_average_time_between(self.get_time_betweens())
+        self.predict(avg_time_between, avg_duration)
 
     def get_start_end_date_objects(self):
         """Function that loops through the list of cycles, and converts the start and end dates to date objects."""
@@ -188,3 +208,12 @@ class Predictor:
     def get_average_time_between(self, time_betweens:list) -> int:
         """Function that accepts a list of time_betweens, and find the average."""
         return sum(time_betweens) // len(time_betweens)
+
+    def predict(self, avg_time_between:int, avg_duration:int) -> str:
+        """Function that accepts the avg time between given dates, and attempts to make a prediction of when the next period may occur"""
+        dh = DateHandler()
+        last_time = self.cycles[-1]
+        print(f"The last cycle started on {dh.get_format_date(last_time[0])}, and ended on {dh.get_format_date(last_time[1])}.")
+        print(f"Lasting an average duration of {avg_duration} days, I predict, the next cycle will come on the...")
+        result = dh.add_days(last_time[0], avg_time_between)
+        print(f"{dh.get_format_date(result)}")
