@@ -1,7 +1,7 @@
 # Folder where all the mechanics for the program will be handled.
 from datetime import date
 from os import system, get_terminal_size
-from pyinputplus import inputDate, inputNum
+from pyinputplus import inputDate, inputNum, inputYesNo
 from database import Database
 
 
@@ -18,13 +18,15 @@ class Menu:
     menu_dict = {
         1: "Predict", 
         2: "Add Period",
-        3: "View"
+        3: "View",
+        4: "Extra"
     }
 
     menu_to_descriptions = {
         "Predict": "Makes a prediction based on previous data as to when the next period may be",
         "Add Period": "Add a start and end date (duration) of a cycle.",
-        "View": "View all cycle dates that I know."
+        "View": "View all cycle dates that I know.",
+        "Extra": "Add extra information"
     }
 
     def menu(self):
@@ -53,15 +55,19 @@ class RequestHandler:
     def handle(self, request:str):
         """Main function. Accepts a task from the user, determines what the task is, and executes the correct function."""
 
+        print(request.center(get_terminal_size().columns, " "))
         if request == "Predict":
             # Function for making predictions
             pass 
         elif request == "Add Period":
             # Function to add a Cycle duration
-            pass
+            self.handle_add_period()
         elif request == "View":
             # Function to display all entries nicely formatted
             self.handle_view()
+            pass
+        elif request == "Extra":
+            # Function to handle extra information, such as stuff needed to prepare for period. Currently unavailable
             pass
         else:
             # Function that cleanly exits the program
@@ -80,7 +86,28 @@ class RequestHandler:
         to_send_list = [f"{i}) From {dh.get_format_date(dh.get_date_object(v[1]))} to {dh.get_format_date(dh.get_date_object(v[2]))}" for i, v in cycles]
         del dh, db
         return "\n".join(to_send_list)
+    
+    def handle_add_period(self):
+        """Function that prompts for information to fill in to the period table."""
+        print("When did the cycle begin? Enter date in format yyyy/mm/dd")
+        start = inputDate(": ")
+        print("Is the cycle still going on?")
+        resp = inputYesNo(": ")
+        if resp == "yes":
+            end = "ongoing"
+        else:
+            print("When did the cycle end? Enter date in format yyyy/mm/dd")
+            end = inputDate(": ")
 
+        db = Database()
+        dh = DateHandler()
+        db.insert_period_entry(dh.get_format_date(start), dh.get_format_date(end) if isinstance(end, date) else end)
+        db.commit_and_close()
+
+        print("Ok, I will remember that.")
+        return True
+        
+        
 class DateHandler:
     """Closs responsible for handling date conversions, and reading date objects"""
 

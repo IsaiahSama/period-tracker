@@ -20,6 +20,11 @@ class Database:
         """Establishes a connection with the database"""
         return connect("trackerdata.sqlite3")
 
+    def insert_period_entry(self, start_date:str, end_date:str) -> bool:
+        """Function which accepts a start and end_date (Or ongoing), and inserts the entry into the database"""
+        self.db.execute("INSERT INTO TrackerTable (START_DATE, END_DATE) VALUES (?, ?)", (start_date, end_date))
+        return True
+
     def query_all_data(self) -> list:
         """Function that queries the database for all entries, and returns all."""
         cursor = self.db.execute("SELECT * FROM TrackerTable")
