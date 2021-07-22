@@ -50,7 +50,7 @@ class RequestHandler:
     """Class responsible for handling and organising user input and program responses"""
 
     def __init__(self) -> None:
-        pass
+        self.db = Database()
 
     def handle(self, request:str):
         """Main function. Accepts a task from the user, determines what the task is, and executes the correct function."""
@@ -58,7 +58,7 @@ class RequestHandler:
         print(request.center(get_terminal_size().columns, " "))
         if request == "Predict":
             # Function for making predictions
-            pass 
+            self.handle_predictions()
         elif request == "Add Period":
             # Function to add a Cycle duration
             self.handle_add_period()
@@ -73,20 +73,10 @@ class RequestHandler:
             # Function that cleanly exits the program
             pass
 
-    def handle_view(self) -> bool:
-        """Function that displays all recorded cycles."""
-        db = Database()
-        cycles = db.query_all_data()
-        db.close()
-        dh = DateHandler()
-        if not cycles:
-            print("You don't seem to have any cycles registered for me to display.")
-            return False
-        
-        to_send_list = [f"{i}) From {dh.get_format_date(dh.get_date_object(v[1]))} to {dh.get_format_date(dh.get_date_object(v[2]))}" for i, v in cycles]
-        del dh, db
-        return "\n".join(to_send_list)
-    
+    def handle_predictions(self):
+        """Function that looks at data from the database, analyzes it, find averages, make comparisons, and then returns a guess as to when the next period should be expected."""
+        pass
+
     def handle_add_period(self):
         """Function that prompts for information to fill in to the period table."""
         print("When did the cycle begin? Enter date in format yyyy/mm/dd")
@@ -99,13 +89,27 @@ class RequestHandler:
             print("When did the cycle end? Enter date in format yyyy/mm/dd")
             end = inputDate(": ")
 
-        db = Database()
+        self.db.connect()
         dh = DateHandler()
-        db.insert_period_entry(dh.get_format_date(start), dh.get_format_date(end) if isinstance(end, date) else end)
-        db.commit_and_close()
+        self.db.insert_period_entry(dh.get_format_date(start), dh.get_format_date(end) if isinstance(end, date) else end)
+        self.db.commit_and_close()
 
         print("Ok, I will remember that.")
         return True
+
+    def handle_view(self) -> bool:
+        """Function that displays all recorded cycles."""
+        self.db.connect()
+        cycles = self.db.query_all_data()
+        self.db.close()
+        dh = DateHandler()
+        if not cycles:
+            print("You don't seem to have any cycles registered for me to display.")
+            return False
+        
+        to_send_list = [f"{i}) From {dh.get_format_date(dh.get_date_object(v[1]))} to {dh.get_format_date(dh.get_date_object(v[2]))}" for i, v in cycles]
+        return "\n".join(to_send_list)
+    
         
         
 class DateHandler:

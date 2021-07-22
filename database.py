@@ -5,7 +5,7 @@ class Database:
     """Class which holds all the operations regarding database usage."""
 
     def __init__(self) -> None:
-        self.db = self.connect()
+        self.connect()
         self.setup()
 
     def setup(self):
@@ -18,7 +18,7 @@ class Database:
 
     def connect(self) -> Connection:
         """Establishes a connection with the database"""
-        return connect("trackerdata.sqlite3")
+        self.db = connect("trackerdata.sqlite3")
 
     def insert_period_entry(self, start_date:str, end_date:str) -> bool:
         """Function which accepts a start and end_date (Or ongoing), and inserts the entry into the database"""
