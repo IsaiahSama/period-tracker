@@ -75,7 +75,11 @@ class RequestHandler:
 
     def handle_predictions(self):
         """Function that looks at data from the database, analyzes it, find averages, make comparisons, and then returns a guess as to when the next period should be expected."""
-        pass
+        self.db.connect()
+        cycles = self.db.query_finished_cycles()
+        if not cycles: print("Sorry, you have no previous finished cycles for me to work with."); return False
+        predictor = Predictor(cycles)
+
 
     def handle_add_period(self):
         """Function that prompts for information to fill in to the period table."""
@@ -90,8 +94,7 @@ class RequestHandler:
             end = inputDate(": ")
 
         self.db.connect()
-        dh = DateHandler()
-        self.db.insert_period_entry(dh.get_format_date(start), dh.get_format_date(end) if isinstance(end, date) else end)
+        self.db.insert_period_entry(str(start), str(end) if isinstance(end, date) else end)
         self.db.commit_and_close()
 
         print("Ok, I will remember that.")
@@ -118,9 +121,9 @@ class DateHandler:
     def __init__(self) -> None:
         pass
 
-    def get_date_object(self, dt:str) -> date:
-        """Function which receives a given date time string, and creates a date object and returns it"""
-        return date.fromisoformat(dt)
+    def get_date_object(self, d:str) -> date:
+        """Function which receives a given date string, and creates a date object and returns it"""
+        return date.fromisoformat(d)
 
     def get_today_date(self) -> date:
         """Function that returns the current date and time as a date object"""
@@ -143,8 +146,45 @@ class DateHandler:
 
 class Predictor:
     """Class responsible for dealing the 'predictive' part of the program"""
-    def __init__(self) -> None:
-        pass
+    def __init__(self, cycles:list) -> None:
+        self.cycles = cycles
 
     def predict(self):
+        """Main function of the Predictor class, which runs all of the functions, and analyzes the data"""
         pass
+
+    def get_start_end_date_objects(self):
+        """Function that loops through the list of cycles, and converts the start and end dates to date objects."""
+
+        dh = DateHandler()
+        
+        self.cycles = [(dh.get_date_object(cycle[1]), dh.get_date_object(cycle[2])) for cycle in self.cycles]
+
+    def get_cycle_durations(self) -> list:
+        """Function that loops through the list of cycles, and gets the duration of each cycle via subtraction
+        
+        Returns a list of tuples, where the first value is it's position, and the second is the number of days"""
+        time_deltas =  [do[1] - do[0] for do in self.cycles]
+        durations = [(i, v.days) for i, v in enumerate(time_deltas)]
+        return durations
+
+    def get_average_duration(self, cycle_durations: list) -> int: 
+        """Function that accepts a list of cycle_durations returned from get_cycle_durations, as an argument and calculates and returns the average."""
+        times = [val[1] for val in cycle_durations]
+        avg = sum(times) // len(times)
+        return avg
+
+    def get_time_betweens(self) -> list:
+        """Function that calculates the time between the end of one cycle, and the start of the next"""
+        time_betweens = []
+        for i in len(self.cycles):
+            if i == len(self.cycles): break
+
+            time_between = self.cycles[i][2] - self.cycles[i+1][1]
+            time_betweens.append(time_between.days)   
+
+        return time_betweens
+
+    def get_average_time_between(self, time_betweens:list) -> int:
+        """Function that accepts a list of time_betweens, and find the average."""
+        return sum(time_betweens) // len(time_betweens)

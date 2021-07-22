@@ -27,9 +27,14 @@ class Database:
 
     def query_all_data(self) -> list:
         """Function that queries the database for all entries, and returns all."""
-        cursor = self.db.execute("SELECT * FROM TrackerTable")
+        cursor = self.db.execute("SELECT * FROM TrackerTable ORDER BY START_DATE DESC;")
         rows = cursor.fetchall()
         return rows
+
+    def query_finished_cycles(self) -> list:
+        """Function that queries the database for all cycles that are NOT ongoing"""
+        rows = self.query_all_data()
+        return [row for row in rows if row[2] != "ongoing"]
 
     def commit_and_close(self):
         """Commits all changes and closes the connection to the database"""
