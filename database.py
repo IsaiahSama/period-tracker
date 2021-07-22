@@ -11,7 +11,7 @@ class Database:
     def setup(self):
         """Function responsible for setting up the database, and ensuring that everything is in order"""
         self.db.execute("""CREATE TABLE IF NOT EXISTS TrackerTable(
-            DATE_ID INTERGER PRIMARY KEY AUTOINCREMENT UNIQUE,
+            DATE_ID INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE,
             START_DATE TEXT,
             END_DATE TEXT)""")
         self.db.commit()
