@@ -81,7 +81,7 @@ class RequestHandler:
             pass
         elif request == "Extra":
             # Function to handle extra information, such as stuff needed to prepare for period. Currently unavailable
-            print("Currently unavailable")
+            self.handle_extra()
             pass
         else:
             # Function that cleanly exits the program
@@ -116,7 +116,7 @@ class RequestHandler:
         print("Ok, I will remember that.")
         return True
 
-    def handle_view(self) -> bool:
+    def handle_view(self) -> str:
         """Function that displays all recorded cycles."""
         self.db.connect()
         cycles = self.db.query_all_data()
@@ -129,7 +129,22 @@ class RequestHandler:
         to_send_list = [f"{i}) From {dh.get_format_date(dh.get_date_object(v[1]))} to {dh.get_format_date(dh.get_date_object(v[2]))}" for i, v in enumerate(cycles)]
         return "\n".join(to_send_list)
     
-        
+    def handle_extra(self):
+        """Function that provides extra information to the user, such as their average cycle duration, their average time between. And maybe more in the future."""
+        self.db.connect()
+        cycles = self.db.query_all_data()
+        predictor = Predictor(cycles)
+        dh = DateHandler()
+
+        print("Good day. Displaying information now")
+        print("\n")
+        divider("=", "=")
+        print(f"Number of stored cycles: {len(cycles)}")
+        print(f"Most recent cycle: {dh.get_format_date(predictor.cycles[-1][0])} to {dh.get_format_date(predictor.cycles[-1][1])}")
+        print(f"Average Duration of cycle: {predictor.get_average_duration(predictor.get_cycle_durations())} days")
+        print(f"Average period between cycles: {predictor.get_average_time_between(predictor.get_time_betweens())} days")
+        print()
+        divider("=", "=")
         
 class DateHandler:
     """Closs responsible for handling date conversions, and reading date objects"""
@@ -163,7 +178,6 @@ class DateHandler:
     def add_days(self, do:date, days:int) -> date:
         """Function which accepts a date object, and a number of days, adds the number of days to the date object, and then return the result."""
         to_return = do
-        print(days)
         for _ in range(days):
             try:
                 to_return = to_return.replace(day=to_return.day + 1)
@@ -178,10 +192,11 @@ class Predictor:
     """Class responsible for dealing the 'predictive' part of the program"""
     def __init__(self, cycles:list) -> None:
         self.cycles = cycles
+        self.get_start_end_date_objects()
+
 
     def main(self):
         """Main function of the Predictor class, which runs all of the functions, and analyzes the data"""
-        self.get_start_end_date_objects()
         avg_duration = self.get_average_duration(self.get_cycle_durations())
         avg_time_between = self.get_average_time_between(self.get_time_betweens())
         self.predict(avg_time_between, avg_duration)
@@ -190,7 +205,6 @@ class Predictor:
         """Function that loops through the list of cycles, and converts the start and end dates to date objects."""
 
         dh = DateHandler()
-        
         self.cycles = [(dh.get_date_object(cycle[1]), dh.get_date_object(cycle[2])) for cycle in self.cycles]
 
     def get_cycle_durations(self) -> list:
@@ -215,7 +229,6 @@ class Predictor:
 
         for i in range(len(to_use)):
             if i == len(to_use) - 1: break
-
             time_between = to_use[i][1] - to_use[i+1][0]
             time_betweens.append(time_between.days)   
 
@@ -230,9 +243,11 @@ class Predictor:
         dh = DateHandler()
         last_time = self.cycles[-1]
         divider()
+        print()
         print(f"The last cycle started on {dh.get_format_date(last_time[0])}, and ended on {dh.get_format_date(last_time[1])}.")
-        print(f"Lasting an average duration of {avg_duration} days, I predict, the next cycle will come on the...")
+        print(f"Lasting an average duration of {avg_duration} days, I predict, the next cycle will come on...")
         result = dh.add_days(last_time[1], avg_time_between)
-        divider()
         print(f"{dh.get_format_date(result)}")
+        print()
+        divider()
         
