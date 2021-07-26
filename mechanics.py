@@ -31,6 +31,7 @@ class Menu:
 
     def menu(self):
         # Function which will have the menu
+        input("Press enter:")
         system("CLS")
         divider()
         # Formats the key-value pairs in a more readable format
@@ -213,7 +214,10 @@ class Predictor:
         """Function that accepts the avg time between given dates, and attempts to make a prediction of when the next period may occur"""
         dh = DateHandler()
         last_time = self.cycles[-1]
+        divider()
         print(f"The last cycle started on {dh.get_format_date(last_time[0])}, and ended on {dh.get_format_date(last_time[1])}.")
         print(f"Lasting an average duration of {avg_duration} days, I predict, the next cycle will come on the...")
         result = dh.add_days(last_time[0], avg_time_between)
+        divider()
         print(f"{dh.get_format_date(result)}")
+        
