@@ -27,7 +27,7 @@ class Database:
 
     def query_all_data(self) -> list:
         """Function that queries the database for all entries, and returns all."""
-        cursor = self.db.execute("SELECT * FROM TrackerTable ORDER BY START_DATE DESC;")
+        cursor = self.db.execute("SELECT * FROM TrackerTable ORDER BY START_DATE ASC;")
         rows = cursor.fetchall()
         return rows
 
