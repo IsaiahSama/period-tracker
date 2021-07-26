@@ -3,11 +3,12 @@ from datetime import date
 from os import system, get_terminal_size
 from pyinputplus import inputDate, inputNum, inputYesNo
 from database import Database
+from time import sleep
 
 
-def divider():
+def divider(to_center="-", dividend="-"):
     """Function that prints out a dividing line"""
-    print("-".center(get_terminal_size().columns, "-"))
+    print(to_center.center(get_terminal_size().columns, dividend))
 
 class Menu:
     """Class responsible for the menu interface that will be provided for users"""
@@ -29,14 +30,25 @@ class Menu:
         "Extra": "Add extra information"
     }
 
+    def main(self):
+        """Main function of the Menu class. Contains an infinite loop to be exited by raising KeyboardInterrupt"""
+        while True:
+            input("Press enter:")
+            system("CLS")
+            print("Press ctrl + z at any time to quit")
+            try:
+                self.menu()
+            except KeyboardInterrupt:
+                print("Bye, was fun having you")
+                sleep(1)    
+                raise SystemExit
+
     def menu(self):
         # Function which will have the menu
-        input("Press enter:")
-        system("CLS")
         divider()
         # Formats the key-value pairs in a more readable format
         # Adds an integer (starting from 1) in front of for all of the now formatted pairs
-        options = [f"{i}){k} - {v}" for i, (k, v) in enumerate(self.menu_to_descriptions.items())]
+        options = [f"{i+1}){k} - {v}" for i, (k, v) in enumerate(self.menu_to_descriptions.items())]
         # Joins the list of formatted pairs onto new lines
         options_msg = "\n".join(options)
         # Sets the prompt
@@ -55,8 +67,8 @@ class RequestHandler:
 
     def handle(self, request:str):
         """Main function. Accepts a task from the user, determines what the task is, and executes the correct function."""
-
-        print(request.center(get_terminal_size().columns, " "))
+        print("\n")
+        divider(request, "=")
         if request == "Predict":
             # Function for making predictions
             self.handle_predictions()
@@ -65,10 +77,11 @@ class RequestHandler:
             self.handle_add_period()
         elif request == "View":
             # Function to display all entries nicely formatted
-            self.handle_view()
+            print(self.handle_view())
             pass
         elif request == "Extra":
             # Function to handle extra information, such as stuff needed to prepare for period. Currently unavailable
+            print("Currently unavailable")
             pass
         else:
             # Function that cleanly exits the program
@@ -113,7 +126,7 @@ class RequestHandler:
             print("You don't seem to have any cycles registered for me to display.")
             return False
         
-        to_send_list = [f"{i}) From {dh.get_format_date(dh.get_date_object(v[1]))} to {dh.get_format_date(dh.get_date_object(v[2]))}" for i, v in cycles]
+        to_send_list = [f"{i}) From {dh.get_format_date(dh.get_date_object(v[1]))} to {dh.get_format_date(dh.get_date_object(v[2]))}" for i, v in enumerate(cycles)]
         return "\n".join(to_send_list)
     
         
@@ -150,7 +163,7 @@ class DateHandler:
     def add_days(self, do:date, days:int) -> date:
         """Function which accepts a date object, and a number of days, adds the number of days to the date object, and then return the result."""
         to_return = do
-
+        print(days)
         for _ in range(days):
             try:
                 to_return = to_return.replace(day=to_return.day + 1)
@@ -159,7 +172,6 @@ class DateHandler:
                     to_return = to_return.replace(month=to_return.month+1, day=1)
                 except ValueError:
                     to_return = to_return.replace(year=to_return.year+1, month=1, day=1)
-
         return to_return
 
 class Predictor:
@@ -198,10 +210,13 @@ class Predictor:
     def get_time_betweens(self) -> list:
         """Function that calculates the time between the end of one cycle, and the start of the next"""
         time_betweens = []
-        for i in len(self.cycles):
-            if i == len(self.cycles): break
+        # Need to reverse list to get larger dates first
+        to_use = sorted(self.cycles, reverse=True)
 
-            time_between = self.cycles[i][2] - self.cycles[i+1][1]
+        for i in range(len(to_use)):
+            if i == len(to_use) - 1: break
+
+            time_between = to_use[i][1] - to_use[i+1][0]
             time_betweens.append(time_between.days)   
 
         return time_betweens
@@ -217,7 +232,7 @@ class Predictor:
         divider()
         print(f"The last cycle started on {dh.get_format_date(last_time[0])}, and ended on {dh.get_format_date(last_time[1])}.")
         print(f"Lasting an average duration of {avg_duration} days, I predict, the next cycle will come on the...")
-        result = dh.add_days(last_time[0], avg_time_between)
+        result = dh.add_days(last_time[1], avg_time_between)
         divider()
         print(f"{dh.get_format_date(result)}")
         
