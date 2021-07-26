@@ -8,3 +8,9 @@ Do note, this is my first time doing something like this using actual data, so i
 Like the name suggests, the purpose of this program is to track menstural cycles, use previous data, and make predictions about when the next one should occur, in an attempt to give the user a heads up. 
 
 Using it just requires interacting with the menu, and letting it know when the user have their cycles, so the program can then take in that data, analyze it, find patterns, and make predictions.
+
+# How to get it
+In the files above, simply download the `tracker.exe` file, save it, and then double click it to run it. Simple :)
+
+# Suggestions?
+I'm always open to suggestions, if you have any, simply email me at zeldaplayergl@gmail.com
